@@ -94,15 +94,19 @@ end
 File.delete("fail.log") if File.exist?("fail.log")
 File.delete("succ.log") if File.exist?("succ.log")
 
-#puts "Start parsing..."
-#puts "Collecting cs source files..."
-#get_cs_fn(Target_dir)
+puts "Start parsing..."
+puts "Collecting cs source files..."
+get_cs_fn(Target_dir)
 
-#puts "Generating rule files..."
-#Parallel.map($fn_arr) do |fn|
-  #gen_rule(fn)
-#end 
+puts "Generating rule files..."
+Parallel.map($fn_arr) do |fn|
+  gen_rule(fn)
+end 
 
-modify_file("APITestAreaSettings.cs", "APITestAreaSettings.rl")
+puts "Modifying files..."
+Parallel.map($fn_arr) do |fn|
+  rule_fn = "#{fn.split(/\./)[0]}.rl"
+  modify_file(fn, rule_fn)
+end
 
 puts "Finished!"
