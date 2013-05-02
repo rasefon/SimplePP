@@ -376,7 +376,7 @@ void log_add_start_tm()
 void log_add_end_tm()
 {
   if(should_add_tm()) {
-    fprintf(output_rule, "+$|%d\n", func_end_line);
+    fprintf(output_rule, "+$|%d|%d\n", func_end_line,curr_func_tm);
   }
 }
 

@@ -13,6 +13,7 @@
 *.output
 *.cs
 *.log
+*.rl
 lex.yy.c
 test.tab.c
 test.tab.h
