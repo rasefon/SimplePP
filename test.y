@@ -7,7 +7,10 @@
 
 extern int yylineno;
 extern int func_end_line;
-FILE* output_rule = NULL;
+extern FILE *yyin;
+FILE *output_rule = NULL;
+FILE *faillog = NULL;
+FILE *succlog = NULL;
 
 char *curr_id_value = NULL;
 int class_tm_line = 0;
@@ -192,7 +195,6 @@ void main(int ac, char **av)
     return;
   }
 
-  extern FILE *yyin;
   yyin = fopen(av[1], "r");
 
   //check file
@@ -201,13 +203,13 @@ void main(int ac, char **av)
     return;
   }
 
-  FILE *faillog = fopen("./fail.log", "a+");
+  faillog = fopen("./fail.log", "a+");
   if (!faillog) {
     perror("fail.log");
     return;
   }
 
-  FILE *succlog = fopen("./succ.log", "a+");
+  succlog = fopen("./succ.log", "a+");
   if (!succlog) {
     perror("succ.log");
     return;
