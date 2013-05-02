@@ -1,3 +1,4 @@
-bison -d -g --debug --report=all test.y
+#!/bin/bash
+bison -d --debug test.y
 flex test.l
-cc -o test test.tab.c lex.yy.c -lfl
+cc -o test test.tab.c lex.yy.c

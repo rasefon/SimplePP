@@ -190,8 +190,16 @@ void main(int ac, char **av)
   /*yydebug = 1;*/
 
 
-  if(ac != 3) {
-    fprintf(stderr, "Need filename and output rule.\n");
+  if(ac != 4) {
+    /*fprintf(stderr, "Need filename and output rule.\n");*/
+    fprintf(stderr, "Usage:\n");
+    fprintf(stderr, "arg1: cs file name.\n");
+    fprintf(stderr, "arg2: output rule file name.\n");
+    fprintf(stderr, "arg3: fail log file name.\n");
+    int i;
+    for(i = 1; i < ac; i++) {
+      fprintf(stderr, "av[%d]:%s\n", i, av[i]);
+    }
     return;
   }
 
@@ -203,28 +211,32 @@ void main(int ac, char **av)
     return;
   }
 
-  faillog = fopen("./fail.log", "a+");
-  if (!faillog) {
-    perror("fail.log");
-    return;
-  }
-
-  succlog = fopen("./succ.log", "a+");
-  if (!succlog) {
-    perror("succ.log");
-    return;
-  }
-
   output_rule = fopen(av[2], "w+");
   if (!output_rule) {
     perror(av[2]);
     return;
   }
 
-  if(!yyparse())
-    fprintf(succlog, "Succeed to parse file: %s\n", av[1]);
-  else
+  /*faillog = fopen("./fail.log", "a+");*/
+  faillog = fopen(av[3], "a+");
+  if (!faillog) {
+    perror("fail.log");
+    return;
+  }
+
+  /*succlog = fopen("./succ.log", "a+");*/
+  /*if (!succlog) {*/
+    /*perror("succ.log");*/
+    /*return;*/
+  /*}*/
+
+  /*if(!yyparse()) {*/
+  /*[>fprintf(succlog, "Succeed to parse file: %s\n", av[1]);<]*/
+  /*}*/
+  /*else {*/
+  if(yyparse()) {
     fprintf(faillog, "Failed to parse file: %s\n", av[1]);
+  }
 
   fcloseall();
 }

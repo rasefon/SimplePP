@@ -63,7 +63,10 @@ CSSTR       @\"[^"]*\"
 }
 
 \[TestMethod.*\] |
-"[ClassInitialize]" { 
+\[TestCleanup.*\] |
+\[TestInitialize.*\] |
+\[ClassCleanup.*\] |
+\[ClassInitialize.*\] { 
   mylog("TM");
   return TM;
 }
