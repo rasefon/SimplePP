@@ -130,7 +130,7 @@ try |
 readonly |
 ref |
 sealed |
-TestData | 
+\[TestData.*\] | 
 short |
 siezof |
 stackalloc |

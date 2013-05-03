@@ -376,7 +376,20 @@ void log_add_start_tm()
 void log_add_end_tm()
 {
   if(should_add_tm()) {
-    fprintf(output_rule, "+$|%d|%d\n", func_end_line,curr_func_tm);
+    int func_tm = NONE;
+    if(NONE == curr_func_tm ) {
+      if (AUTO_C == curr_class_tm || AUTO_RB == curr_class_tm) {
+        func_tm = curr_class_tm;
+      }
+      else if(NONE == curr_class_tm) {
+        func_tm = 0;
+      }
+    }
+    else if(NONE != curr_func_tm) {
+      func_tm = curr_func_tm;
+    }
+
+    fprintf(output_rule, "+$|%d|%d\n", func_end_line, func_tm);
   }
 }
 
