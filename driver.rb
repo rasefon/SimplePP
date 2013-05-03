@@ -11,6 +11,11 @@ Fails_log = "#{Dir.pwd}/fails.log"
 
 $fn_arr = Array.new
 
+
+$client_name = ""
+puts "Need p4 client name" unless File.exist?("p4Client.txt")
+File.open("p4Client.txt") { |f| $client_name = f.readlines[0].chop }
+
 def get_cs_fn(entry)
   Dir.chdir(entry) do
     files = Dir.glob('*.cs')
@@ -28,9 +33,19 @@ def get_cs_fn(entry)
   end
 end
 
+def get_rule_fn(fn)
+  rl_fn = fn[0..fn.size-3] + "rl"
+  rl_fn
+end
+
 def gen_rule(fn)
-  rule_fn = "#{fn.split(/\./)[0]}.rl"
+  rule_fn = get_rule_fn(fn)
   system "#{Parser_exec} \"#{fn}\" \"#{rule_fn}\" #{Fails_log}"
+end
+
+def get_p4_path(fn)
+  # stupid op!!!
+  "/" + fn[30, fn.length-30]
 end
 
 def modify_file(fn, rl)
@@ -45,8 +60,16 @@ def modify_file(fn, rl)
   src_file.close
 
   File.open(rl, "r") do |rules|
-    return if rules.readlines.empty?
-    rules.readlines.each do |rule|
+    rl_lines = rules.readlines
+    return if rl_lines.empty?
+
+    # Perforce
+    cmd = "p4.exe -c #{$client_name} " + "edit \"#{get_p4_path(fn)}\""
+    return unless system cmd
+
+    log_file = File.open("log.txt", "a+")
+    
+    rl_lines.each do |rule|
       line = rule.split(/\|/)
 
       op_line = line[1].to_i
@@ -61,20 +84,21 @@ def modify_file(fn, rl)
         insert_pos = line[1].to_i + delta - 1
         # protection!
         if "{" != src_lines[insert_pos - 1].chop.lstrip.rstrip
-          puts "Nasty code style!"
+          puts "Nasty code style for cs file:#{fn}"
+          log_file.write("Nasty code style for cs file:#{fn}\n")
           return
         end
-        src_lines.insert(insert_pos, "transaction.Start(\"#{line[2].chop}\");\r\n")
-        src_lines.insert(insert_pos, "{\r\n")
-        src_lines.insert(insert_pos, "using (Transaction transaction = new Transaction(RevitDoc))\r\n")
+        src_lines.insert(insert_pos, "         transaction.Start(\"#{line[2].chop}\");\r\n")
+        src_lines.insert(insert_pos, "      {\r\n")
+        src_lines.insert(insert_pos, "      using (Transaction transaction = new Transaction(RevitDoc))\r\n")
         delta += 3
       elsif "+$" == line[0]
         insert_pos = line[1].to_i + delta - 1
-        src_lines.insert(insert_pos, "}\r\n")
+        src_lines.insert(insert_pos, "      }\r\n")
         if 2 == line[2].to_i
-          src_lines.insert(insert_pos, "transaction.RollBack();\r\n")
+          src_lines.insert(insert_pos, "         transaction.RollBack();\r\n")
         elsif 0 == line[2].to_i
-          src_lines.insert(insert_pos, "transaction.Commit();\r\n")
+          src_lines.insert(insert_pos, "         transaction.Commit();\r\n")
         else
           puts "Error transection mode."
         end
@@ -93,6 +117,7 @@ end
 
 File.delete("fail.log") if File.exist?("fail.log")
 File.delete("succ.log") if File.exist?("succ.log")
+File.delete("log.txt") if File.exist?("log.txt")
 
 puts "Start parsing..."
 puts "Collecting cs source files..."
@@ -105,8 +130,10 @@ end
 
 puts "Modifying files..."
 Parallel.map($fn_arr) do |fn|
-  rule_fn = "#{fn.split(/\./)[0]}.rl"
+  rule_fn = get_rule_fn(fn)
   modify_file(fn, rule_fn)
 end
+
+#puts get_p4_path("/cygdrive/e/SourceCode/Client1/Dev/Regression/API/FamilyCreation/APITestNewSweep231093/Source/APITestFamilyItemFactory.cs")
 
 puts "Finished!"
