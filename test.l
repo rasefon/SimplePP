@@ -15,12 +15,11 @@
 #define PUTS 
 #endif
 
-extern int into_func;
+extern char into_func;
 extern int brace_count;
 
 int func_end_line = 0;
 
-void mylog(char *msg);
 
 %}
 
@@ -48,20 +47,20 @@ CSSTR       @\"[^"]*\"
 #.*
 
 "[Transaction(TestTransactionMode.Manual)]" {
-  mylog("STR");
+  PUTS("STR");
   return TMM;
 }
 "[Transaction(TestTransactionMode.CommitAutomatically)]" {
-  mylog("TMCA");
+  PUTS("TMCA");
   return TMCA;
 }
 "[Transaction(TestTransactionMode.RollbackAutomatically)]" { 
-  mylog("TMRA");
+  PUTS("TMRA");
   return TMRA;
 }
 
 \[TestClass.*\] { 
-  mylog("TC");
+  PUTS("TC");
   return TC;
 }
 
@@ -70,7 +69,7 @@ CSSTR       @\"[^"]*\"
 \[TestInitialize.*\] |
 \[ClassCleanup.*\] |
 \[ClassInitialize.*\] { 
-  mylog("TM");
+  PUTS("TM");
   return TM;
 }
 
@@ -78,30 +77,33 @@ CSSTR       @\"[^"]*\"
 class |
 interface |
 struct { 
-  mylog("CLASS");
+  PUTS("CLASS");
   return CLASS;
 }
 
 "{" { 
-  mylog(yytext);
+  PUTS("%s ic:%d\n", yytext, into_func);
+  PUTS("before bc:%d---", brace_count);
   if(into_func) {
     brace_count++;
   }
+  PUTS("after bc:%d\n", brace_count);
   return yytext[0];
 }
 
 "}" { 
-  mylog(yytext);
-  PUTS("bc:%d\n", brace_count);
+  PUTS("%s ic%d\n:", yytext, into_func);
+  PUTS("before bc:%d---", brace_count);
   if(into_func && brace_count > 0) {
     func_end_line = yylineno;
   }
   brace_count--;
+  PUTS("after bc:%d\n", brace_count);
   return yytext[0];
 }
 
 ";" {
-  mylog(yytext);
+  PUTS("%s", yytext);
   return yytext[0];
 }
 
@@ -177,7 +179,3 @@ void /* ignore all these token! */
 
 %%
 
-void mylog(char* msg)
-{
-  PUTS("%s ", msg);
-}

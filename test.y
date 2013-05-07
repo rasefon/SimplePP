@@ -287,15 +287,16 @@ void leave_class()
 
 void enter_func()
 {
-  P1("enter func\n");
+  P2("enter func\n");
   into_func = 1;
   should_record_line = 1;
   reset_id_value();
+  brace_count = 0;
 }
 
 void leave_func()
 { 
-  P1("leave func\n");
+  P2("leave func\n");
   into_func = 0;
   should_record_line = 0;
   reset_id_value();

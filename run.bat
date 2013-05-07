@@ -1,3 +1,4 @@
+cp _test.cs test.cs
 rm -rf test.exe
 bison -d --debug --report=all test.y
 flex test.l
