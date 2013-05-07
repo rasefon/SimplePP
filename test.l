@@ -15,6 +15,9 @@
 #define PUTS 
 #endif
 
+extern int into_func;
+extern int brace_count;
+
 int func_end_line = 0;
 
 void mylog(char *msg);
@@ -81,12 +84,19 @@ struct {
 
 "{" { 
   mylog(yytext);
+  if(into_func) {
+    brace_count++;
+  }
   return yytext[0];
 }
 
 "}" { 
   mylog(yytext);
-  func_end_line = yylineno;
+  PUTS("bc:%d\n", brace_count);
+  if(into_func && brace_count > 0) {
+    func_end_line = yylineno;
+  }
+  brace_count--;
   return yytext[0];
 }
 

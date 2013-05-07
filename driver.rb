@@ -59,7 +59,7 @@ end
 def modify_file(fn, rl)
   # for line count
   delta = 0
-  #handled_lines = []
+  handled_rm_lines = []
   max_line = 0;
   puts "Rule file doesn't exist:#{rl}." unless File.exist?(rl)
   puts "Source file doesn't exist:#{fn}." unless File.exist?(fn)
@@ -73,8 +73,8 @@ def modify_file(fn, rl)
     return if rl_lines.empty?
 
     # Perforce
-    #cmd = "p4.exe -c #{$client_name} " + "edit \"#{get_p4_path(fn)}\""
-    #return unless system cmd
+    cmd = "p4.exe -c #{$client_name} " + "edit \"#{get_p4_path(fn)}\""
+    return unless system cmd
 
     log_file = File.open("log.txt", "a+")
     
@@ -82,13 +82,13 @@ def modify_file(fn, rl)
       line = rule.split(/\|/)
 
       op_line = line[1].to_i
-      #next if handled_lines.include?(op_line)
-      #handled_lines << op_line
 
       if "-" == line[0]
         #src_lines.delete_at(op_line + delta - 1)
+        next if handled_rm_lines.include?(op_line)
         src_lines.delete_at(get_op_pos(op_line, max_line, delta))
         delta -= 1;
+        handled_rm_lines << op_line
       elsif "+^" == line[0]
         #insert_pos = line[1].to_i + delta - 1
         insert_pos = get_op_pos(line[1].to_i, max_line, delta)
@@ -98,18 +98,18 @@ def modify_file(fn, rl)
           log_file.write("Nasty code style for cs file:#{fn}, Line:#{line[1]}\n")
           return
         end
-        src_lines.insert(insert_pos, "            transaction.Start(\"#{line[2].chop}\");\r\n")
+        src_lines.insert(insert_pos, "            _transaction_.Start(\"#{line[2].chop}\");\r\n")
         src_lines.insert(insert_pos, "         {\r\n")
-        src_lines.insert(insert_pos, "         using (Transaction transaction = new Transaction(RevitDoc))\r\n")
+        src_lines.insert(insert_pos, "         using (Transaction _transaction_ = new Transaction(RevitDoc))\r\n")
         delta += 3
       elsif "+$" == line[0]
         #insert_pos = line[1].to_i + delta - 1
         insert_pos = get_op_pos(line[1].to_i, max_line, delta)
         src_lines.insert(insert_pos, "         }\r\n")
         if 2 == line[2].to_i
-          src_lines.insert(insert_pos, "            transaction.RollBack();\r\n")
+          src_lines.insert(insert_pos, "            _transaction_.RollBack();\r\n")
         elsif 0 == line[2].to_i
-          src_lines.insert(insert_pos, "            transaction.Commit();\r\n")
+          src_lines.insert(insert_pos, "            _transaction_.Commit();\r\n")
         else
           puts "Error transection mode:#{line[2]}"
         end
@@ -132,22 +132,22 @@ File.delete("fail.log") if File.exist?("fail.log")
 File.delete("succ.log") if File.exist?("succ.log")
 File.delete("log.txt") if File.exist?("log.txt")
 
-#puts "Start parsing..."
-#puts "Collecting cs source files..."
-#get_cs_fn(Target_dir)
+puts "Start parsing..."
+puts "Collecting cs source files..."
+get_cs_fn(Target_dir)
 
-#puts "Generating rule files..."
-#Parallel.map($fn_arr) do |fn|
-  #gen_rule(fn)
-#end 
+puts "Generating rule files..."
+Parallel.map($fn_arr) do |fn|
+  gen_rule(fn)
+end 
 
-#puts "Modifying files..."
-#Parallel.map($fn_arr) do |fn|
-  #rule_fn = get_rule_fn(fn)
-  #modify_file(fn, rule_fn)
-#end
+puts "Modifying files..."
+Parallel.map($fn_arr) do |fn|
+  rule_fn = get_rule_fn(fn)
+  modify_file(fn, rule_fn)
+end
 
-gen_rule("test.cs")
-modify_file("test.cs", "test.rl")
+#gen_rule("test.cs")
+#modify_file("test.cs", "test.rl")
 
 puts "Finished!"

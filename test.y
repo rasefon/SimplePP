@@ -31,6 +31,7 @@ char into_class = 0;
 char into_func = 0;
 char should_record_line = 0;
 char class_tm_recorded = 0;
+int brace_count = 0;
 
 void yyerror(char *s, ...);
 
@@ -175,6 +176,7 @@ func_stmt: prop_list {enter_func();
     P2("@class tm line:%d func tm line:%d@\n", class_tm_line, func_tm_line);
     P2("func start line:%d CTM:%d FTM:%d fn:%s\n", func_start_line, curr_class_tm, curr_func_tm, curr_id_value);
     P2("func end line:%d\n\n", func_end_line);
+    P2("yylineno:%d\n\n", yylineno);
     log_rm_func_tm();
     log_add_start_tm();
     log_add_end_tm();

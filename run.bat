@@ -1,3 +1,4 @@
+rm -rf test.exe
 bison -d --debug --report=all test.y
 flex test.l
-cl /FeTest test.tab.c lex.yy.c
+cc -o test test.tab.c lex.yy.c
